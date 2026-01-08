@@ -14,11 +14,19 @@
         pkgs,
         ...
       }: let
-        cfg = config.services.${name};
-        system = pkgs.stdenv.hostPlatform.system;
+        cfg = config.services.prometheus.exporters.samba;
       in {
-        options.services.samba-exporter = {
+        options.services.prometheus.exporters.samba = {
           enable = lib.mkEnableOption "Samba Prometheus Exporter";
+
+          package = lib.mkOption {
+            type = lib.types.package;
+            # Default to pkgs.samba-exporter. 
+            # This allows it to be picked up from an overlay or nixpkgs.
+            default = pkgs.samba-exporter; 
+            defaultText = lib.literalExpression "pkgs.samba-exporter";
+            description = "The samba-exporter package to use.";
+          };
 
           port = lib.mkOption {
             type = lib.types.port;
@@ -52,8 +60,7 @@
         };
 
         config = lib.mkIf cfg.enable {
-          # Add the exporter to the system path for manual debugging
-          environment.systemPackages = [self.packages.${pkgs.system}.default];
+          environment.systemPackages = [cfg.package];
 
           systemd.services.samba-exporter = {
             description = "Samba Prometheus Exporter";
@@ -64,7 +71,7 @@
               # Use the absolute path to smbstatus from the specific Nix store path
               ExecStart =
                 lib.concatStringsSep " " [
-                  "${self.packages.${pkgs.system}.default}/bin/samba-exporter"
+                  "${cfg.package}/bin/samba-exporter"
                   "--listen-address ${cfg.address}"
                   "--port ${toString cfg.port}"
                   "--smbstatus-path ${cfg.sambaPackage}/bin/smbstatus"
