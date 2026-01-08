@@ -1,0 +1,13 @@
+[package]
+name = "samba-exporter"
+version = "0.1.0"
+edition = "2021"
+license = "MIT Or Apache-2.0"
+repository = "https://github.com/disassembler/yourapp"
+
+[dependencies]
+prometheus = "0.13"
+lazy_static = "1.4"
+axum = "0.7"      # Simple HTTP server
+tokio = { version = "1.0", features = ["full"] }
+trivialdb = "0.1.9"
